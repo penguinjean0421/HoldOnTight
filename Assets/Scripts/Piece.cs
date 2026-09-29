@@ -46,6 +46,8 @@ public class Piece : MonoBehaviour
         // before it locks in place
         lockTime += Time.deltaTime;
 
+        if (Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftShift)) { board.HoldPiece(); }
+
         // Handle rotation
         if (Input.GetKeyDown(KeyCode.Q))
         {

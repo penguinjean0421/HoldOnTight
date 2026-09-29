@@ -16,6 +16,16 @@ public class Board : MonoBehaviour
     public Vector3Int previewPosition = new Vector3Int(-15, 4, 0);
     public TetrominoData nextPieceData { get; private set; }
 
+    [Header("Hold")]
+    // 위치와 타일맵
+    public Tilemap holdTilemap;
+    public Vector3Int holdPosition = new Vector3Int(-15, -4, 0);
+
+    // 상태
+    public TetrominoData heldPieceData { get; private set; }
+    public bool hasHeldPiece { get; private set; } = false;
+    public bool canHold { get; private set; } = true;
+
     public RectInt Bounds
     {
         get
@@ -45,6 +55,8 @@ public class Board : MonoBehaviour
 
     public void SpawnPiece()
     {
+        canHold = true;
+
         // 미리 뽑아둔 nextPieceData로 현재 조각을 생성
         TetrominoData currentData = nextPieceData;
         activePiece.Initialize(this, spawnPosition, currentData);
@@ -195,6 +207,51 @@ public class Board : MonoBehaviour
         {
             Vector3Int tilePosition = (Vector3Int)nextPieceData.cells[i] + previewPosition;
             previewTilemap.SetTile(tilePosition, nextPieceData.tile);
+        }
+    }
+    #endregion
+
+    #region Hold
+    public void HoldPiece()
+    {
+        if (!canHold) { return; }
+
+        Clear(activePiece);
+
+        if (!hasHeldPiece)
+        {
+            // 홀드 상자가 비어있으면 현재 조각 저장 후 새 조각 스폰
+            heldPieceData = activePiece.data;
+            hasHeldPiece = true;
+            SpawnPiece();
+        }
+        else
+        {
+            // 이미 홀드된 조각이 있으면 현재 조각과 홀드 조각 교체 (Swap)
+            TetrominoData temp = activePiece.data;
+            activePiece.Initialize(this, spawnPosition, heldPieceData);
+            heldPieceData = temp;
+
+            if (!IsValidPosition(activePiece, spawnPosition)) { GameOver(); }
+            else { Set(activePiece); }
+        }
+
+        canHold = false;
+
+        RenderHold();
+    }
+
+    // Hold Tilemap에 홀드된 조각 그리기
+    void RenderHold()
+    {
+        if (holdTilemap == null) { return; }
+
+        holdTilemap.ClearAllTiles();
+
+        for (int i = 0; i < heldPieceData.cells.Length; i++)
+        {
+            Vector3Int tilePosition = (Vector3Int)heldPieceData.cells[i] + holdPosition;
+            holdTilemap.SetTile(tilePosition, heldPieceData.tile);
         }
     }
     #endregion
