@@ -11,6 +11,11 @@ public class Board : MonoBehaviour
     public Vector2Int boardSize = new Vector2Int(10, 20);
     public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
+    [Header("Preview")]
+    public Tilemap previewTilemap;
+    public Vector3Int previewPosition = new Vector3Int(-15, 4, 0);
+    public TetrominoData nextPieceData { get; private set; }
+
     public RectInt Bounds
     {
         get
@@ -33,29 +38,29 @@ public class Board : MonoBehaviour
 
     private void Start()
     {
+        SetNextPiece();
+
         SpawnPiece();
     }
 
     public void SpawnPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
-        TetrominoData data = tetrominoes[random];
+        // 미리 뽑아둔 nextPieceData로 현재 조각을 생성
+        TetrominoData currentData = nextPieceData;
+        activePiece.Initialize(this, spawnPosition, currentData);
 
-        activePiece.Initialize(this, spawnPosition, data);
+        // 다음에 등장할 조각을 미리 뽑고 Preview 갱신
+        SetNextPiece();
 
-        if (IsValidPosition(activePiece, spawnPosition))
-        {
-            Set(activePiece);
-        }
-        else
-        {
-            GameOver();
-        }
+        if (IsValidPosition(activePiece, spawnPosition)) { Set(activePiece); }
+        else { GameOver(); }
     }
 
     public void GameOver()
     {
         tilemap.ClearAllTiles();
+
+        if (previewTilemap != null) { previewTilemap.ClearAllTiles(); }
 
         // Do anything else you want on game over here..
     }
@@ -168,5 +173,30 @@ public class Board : MonoBehaviour
             row++;
         }
     }
+
+    #region Preview
+    void SetNextPiece()
+    {
+        int random = Random.Range(0, tetrominoes.Length);
+        nextPieceData = tetrominoes[random];
+
+        RenderPreview();
+    }
+
+    void RenderPreview()
+    {
+        if (previewTilemap == null) { return; }
+
+        // 기존 미리 보기 타일을 지움.
+        previewTilemap.ClearAllTiles();
+
+        // 선택된 nextPieceData의 셀 정보로 타일 배치
+        for (int i = 0; i < nextPieceData.cells.Length; i++)
+        {
+            Vector3Int tilePosition = (Vector3Int)nextPieceData.cells[i] + previewPosition;
+            previewTilemap.SetTile(tilePosition, nextPieceData.tile);
+        }
+    }
+    #endregion
 
 }
