@@ -12,6 +12,15 @@ public class Piece : MonoBehaviour
     public float moveDelay = 0.1f;
     public float lockDelay = 0.5f;
 
+    [Header("Play")]
+    public KeyCode left = KeyCode.LeftArrow;
+    public KeyCode right = KeyCode.RightArrow;
+    public KeyCode softDrop = KeyCode.DownArrow;
+    public KeyCode hardDrop = KeyCode.Space;
+    public KeyCode cwRotate = KeyCode.X;
+    public KeyCode acwRotate = KeyCode.Z;
+    public KeyCode hold = KeyCode.C;
+
     private float stepTime;
     private float moveTime;
     private float lockTime;
@@ -46,36 +55,21 @@ public class Piece : MonoBehaviour
         // before it locks in place
         lockTime += Time.deltaTime;
 
-        if (Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftShift)) { board.HoldPiece(); }
+        if (Input.GetKeyDown(hold)) { board.HoldPiece(); }
 
         // Handle rotation
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            Rotate(-1);
-        }
-        else if (Input.GetKeyDown(KeyCode.E))
-        {
-            Rotate(1);
-        }
+        if (Input.GetKeyDown(acwRotate)) { Rotate(-1); }
+        else if (Input.GetKeyDown(cwRotate)) { Rotate(1); }
 
         // Handle hard drop
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            HardDrop();
-        }
+        if (Input.GetKeyDown(hardDrop)) { HardDrop(); }
 
         // Allow the player to hold movement keys but only after a move delay
         // so it does not move too fast
-        if (Time.time > moveTime)
-        {
-            HandleMoveInputs();
-        }
+        if (Time.time > moveTime) { HandleMoveInputs(); }
 
         // Advance the piece to the next row every x seconds
-        if (Time.time > stepTime)
-        {
-            Step();
-        }
+        if (Time.time > stepTime) { Step(); }
 
         board.Set(this);
     }
@@ -83,7 +77,7 @@ public class Piece : MonoBehaviour
     private void HandleMoveInputs()
     {
         // Soft drop movement
-        if (Input.GetKey(KeyCode.S))
+        if (Input.GetKey(softDrop))
         {
             if (Move(Vector2Int.down))
             {
@@ -93,14 +87,8 @@ public class Piece : MonoBehaviour
         }
 
         // Left/right movement
-        if (Input.GetKey(KeyCode.A))
-        {
-            Move(Vector2Int.left);
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            Move(Vector2Int.right);
-        }
+        if (Input.GetKey(left)) { Move(Vector2Int.left); }
+        else if (Input.GetKey(right)) { Move(Vector2Int.right); }
     }
 
     private void Step()
@@ -111,18 +99,12 @@ public class Piece : MonoBehaviour
         Move(Vector2Int.down);
 
         // Once the piece has been inactive for too long it becomes locked
-        if (lockTime >= lockDelay)
-        {
-            Lock();
-        }
+        if (lockTime >= lockDelay) { Lock(); }
     }
 
     private void HardDrop()
     {
-        while (Move(Vector2Int.down))
-        {
-            continue;
-        }
+        while (Move(Vector2Int.down)) { continue; }
 
         Lock();
     }

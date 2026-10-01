@@ -1389,6 +1389,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6570178d836e8642a13a0b983600cf3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  left: 0
+  right: 0
+  softDrop: 0
+  hardDrop: 32
   stepDelay: 1
   moveDelay: 0.1
   lockDelay: 0.5
