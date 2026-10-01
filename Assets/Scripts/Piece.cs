@@ -22,12 +22,18 @@ public class Piece : MonoBehaviour
     public KeyCode uTurnRotate = KeyCode.A;
     public KeyCode hold = KeyCode.C;
 
+    [Header("Drop Score")]
+    public int hardDropValue;
+    int dropDistance;
+
     private float stepTime;
     private float moveTime;
     private float lockTime;
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
+        dropDistance = 0;
+
         this.data = data;
         this.board = board;
         this.position = position;
@@ -37,15 +43,9 @@ public class Piece : MonoBehaviour
         moveTime = Time.time + moveDelay;
         lockTime = 0f;
 
-        if (cells == null)
-        {
-            cells = new Vector3Int[data.cells.Length];
-        }
+        if (cells == null) { cells = new Vector3Int[data.cells.Length]; }
 
-        for (int i = 0; i < cells.Length; i++)
-        {
-            cells[i] = (Vector3Int)data.cells[i];
-        }
+        for (int i = 0; i < cells.Length; i++) { cells[i] = (Vector3Int)data.cells[i]; }
     }
 
     private void Update()
@@ -83,10 +83,16 @@ public class Piece : MonoBehaviour
         {
             if (Move(Vector2Int.down))
             {
+                dropDistance++;
+
                 // Update the step time to prevent double movement
                 stepTime = Time.time + stepDelay;
+
+                GameManager.Instance.AddScore(1);
             }
         }
+
+
 
         // Left/right movement
         if (Input.GetKey(left)) { Move(Vector2Int.left); }
@@ -106,7 +112,8 @@ public class Piece : MonoBehaviour
 
     private void HardDrop()
     {
-        while (Move(Vector2Int.down)) { continue; }
+        while (Move(Vector2Int.down)) { dropDistance++; }
+        GameManager.Instance.AddScore(dropDistance * hardDropValue);
 
         Lock();
     }

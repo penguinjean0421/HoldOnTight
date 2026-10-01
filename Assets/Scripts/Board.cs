@@ -26,6 +26,9 @@ public class Board : MonoBehaviour
     public bool hasHeldPiece { get; private set; } = false;
     public bool canHold { get; private set; } = true;
 
+    [Header("Score")]
+    public int[] lineScores = { 0, 100, 300, 500, 800 }; // 1줄, 2줄, 3줄, 4줄
+
     public RectInt Bounds
     {
         get
@@ -70,9 +73,7 @@ public class Board : MonoBehaviour
 
     public void GameOver()
     {
-        tilemap.ClearAllTiles();
-
-        if (previewTilemap != null) { previewTilemap.ClearAllTiles(); }
+        GameManager.Instance.GameOver();
 
         // Do anything else you want on game over here..
     }
@@ -124,6 +125,7 @@ public class Board : MonoBehaviour
     {
         RectInt bounds = Bounds;
         int row = bounds.yMin;
+        int linesCleared = 0;
 
         // Clear from bottom to top
         while (row < bounds.yMax)
@@ -138,6 +140,11 @@ public class Board : MonoBehaviour
             {
                 row++;
             }
+        }
+
+        if (linesCleared > 0)
+        {
+            GameManager.Instance.AddScore(lineScores[linesCleared]);
         }
     }
 
