@@ -19,6 +19,7 @@ public class Piece : MonoBehaviour
     public KeyCode hardDrop = KeyCode.Space;
     public KeyCode cwRotate = KeyCode.X;
     public KeyCode acwRotate = KeyCode.Z;
+    public KeyCode uTurnRotate = KeyCode.A;
     public KeyCode hold = KeyCode.C;
 
     private float stepTime;
@@ -60,6 +61,7 @@ public class Piece : MonoBehaviour
         // Handle rotation
         if (Input.GetKeyDown(acwRotate)) { Rotate(-1); }
         else if (Input.GetKeyDown(cwRotate)) { Rotate(1); }
+        else if (Input.GetKeyDown(uTurnRotate)) { Rotate(2); }
 
         // Handle hard drop
         if (Input.GetKeyDown(hardDrop)) { HardDrop(); }
@@ -157,31 +159,35 @@ public class Piece : MonoBehaviour
     {
         float[] matrix = Data.RotationMatrix;
 
+        int steps = Mathf.Abs(direction);
+        int dir = direction > 0 ? 1 : -1;
+
         // Rotate all of the cells using the rotation matrix
-        for (int i = 0; i < cells.Length; i++)
+        for (int step = 0; step < steps; step++)
         {
-            Vector3 cell = cells[i];
-
-            int x, y;
-
-            switch (data.tetromino)
+            for (int i = 0; i < cells.Length; i++)
             {
-                case Tetromino.I:
-                case Tetromino.O:
-                    // "I" and "O" are rotated from an offset center point
-                    cell.x -= 0.5f;
-                    cell.y -= 0.5f;
-                    x = Mathf.CeilToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-                    y = Mathf.CeilToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-                    break;
+                Vector3 cell = cells[i];
+                int x, y;
 
-                default:
-                    x = Mathf.RoundToInt((cell.x * matrix[0] * direction) + (cell.y * matrix[1] * direction));
-                    y = Mathf.RoundToInt((cell.x * matrix[2] * direction) + (cell.y * matrix[3] * direction));
-                    break;
+                switch (data.tetromino)
+                {
+                    case Tetromino.I:
+                    case Tetromino.O:
+                        cell.x -= 0.5f;
+                        cell.y -= 0.5f;
+                        x = Mathf.CeilToInt((cell.x * matrix[0] * dir) + (cell.y * matrix[1] * dir));
+                        y = Mathf.CeilToInt((cell.x * matrix[2] * dir) + (cell.y * matrix[3] * dir));
+                        break;
+
+                    default:
+                        x = Mathf.RoundToInt((cell.x * matrix[0] * dir) + (cell.y * matrix[1] * dir));
+                        y = Mathf.RoundToInt((cell.x * matrix[2] * dir) + (cell.y * matrix[3] * dir));
+                        break;
+                }
+
+                cells[i] = new Vector3Int(x, y, 0);
             }
-
-            cells[i] = new Vector3Int(x, y, 0);
         }
     }
 
