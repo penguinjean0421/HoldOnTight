@@ -28,6 +28,7 @@ public class Board : MonoBehaviour
 
     [Header("Score")]
     public int[] lineScores = { 0, 100, 300, 500, 800 }; // 1줄, 2줄, 3줄, 4줄
+    public float tSpinValue;
 
     public RectInt Bounds
     {
@@ -121,7 +122,7 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    public void ClearLines()
+    public void ClearLines(bool isTSpin = false)
     {
         RectInt bounds = Bounds;
         int row = bounds.yMin;
@@ -135,6 +136,7 @@ public class Board : MonoBehaviour
             if (IsLineFull(row))
             {
                 LineClear(row);
+                linesCleared++;
             }
             else
             {
@@ -142,10 +144,8 @@ public class Board : MonoBehaviour
             }
         }
 
-        if (linesCleared > 0)
-        {
-            GameManager.Instance.AddScore(lineScores[linesCleared]);
-        }
+        if (isTSpin) { GameManager.Instance.AddScore((int)(lineScores[linesCleared] * tSpinValue)); }
+        else if (linesCleared > 0) { GameManager.Instance.AddScore(lineScores[linesCleared]); }
     }
 
     public bool IsLineFull(int row)
@@ -263,4 +263,39 @@ public class Board : MonoBehaviour
     }
     #endregion
 
+    #region T-Spin
+    public bool CheckTSpin(Piece piece)
+    {
+        // 1. T 조각이 아니면 감지하지 않음
+        if (piece.data.tetromino != Tetromino.T) { return false; }
+
+        // 2. 마지막 동작이 회전이 아니었으면 감지하지 않음
+        if (!piece.isLastMoveRotate) { return false; }
+
+        // 3. T 조각 중심(0, 0) 기준 4개 대각선 모서리 위치 검사
+        Vector3Int center = piece.position;
+        Vector3Int[] corners = new Vector3Int[]
+        {
+        center + new Vector3Int(-1,  1, 0), // 대각선 좌상
+        center + new Vector3Int( 1,  1, 0), // 대각선 우상
+        center + new Vector3Int(-1, -1, 0), // 대각선 좌하
+        center + new Vector3Int( 1, -1, 0)  // 대각선 우하
+        };
+
+        int occupiedCorners = 0;
+        RectInt bounds = Bounds;
+
+        foreach (Vector3Int corner in corners)
+        {
+            // 보드 경계 밖이거나 이미 타일이 차 있는 경우 충돌로 간주
+            if (!bounds.Contains((Vector2Int)corner) || tilemap.HasTile(corner))
+            {
+                occupiedCorners++;
+            }
+        }
+
+        // 4개 모서리 중 3개 이상 채워져 있다면 T-Spin 성공
+        return occupiedCorners >= 3;
+    }
+    #endregion
 }
