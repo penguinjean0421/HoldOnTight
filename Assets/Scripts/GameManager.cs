@@ -1,4 +1,3 @@
-using UnityEditor;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -41,10 +40,6 @@ public class GameManager : MonoBehaviour
         // Time.timeScale = 0f;
 
         UIManager.Instance.ShowGameOver();
-
-#if UNITY_EDITOR
-        EditorApplication.isPaused = true;
-#endif
     }
 
 
