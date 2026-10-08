@@ -127,7 +127,9 @@ public class Piece : MonoBehaviour
         board.Set(this);
 
         bool isTSpin = board.CheckTSpin(this);
-        board.ClearLines();
+        board.ClearLines(isTSpin);
+
+        if (board.WillNextPieceOverlap()) { board.GameOver(); return; }
         board.SpawnPiece();
     }
 

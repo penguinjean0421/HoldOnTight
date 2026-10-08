@@ -11,6 +11,9 @@ public class Board : MonoBehaviour
     public Vector2Int boardSize = new Vector2Int(10, 20);
     public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
+    [Header("Game Over")]
+    public Tile gameOverTile;
+
     [Header("Preview")]
     public Tilemap previewTilemap;
     public Vector3Int previewPosition = new Vector3Int(-15, 4, 0);
@@ -69,7 +72,11 @@ public class Board : MonoBehaviour
         SetNextPiece();
 
         if (IsValidPosition(activePiece, spawnPosition)) { Set(activePiece); }
-        else { GameOver(); }
+        else
+        {
+            SetPartialGameOverPiece(activePiece, spawnPosition);
+            GameOver();
+        }
     }
 
     public void GameOver()
@@ -77,6 +84,26 @@ public class Board : MonoBehaviour
         GameManager.Instance.GameOver();
 
         // Do anything else you want on game over here..
+    }
+
+    void SetPartialGameOverPiece(Piece piece, Vector3Int position)
+    {
+        RectInt bounds = Bounds;
+
+        for (int i = 0; i < piece.cells.Length; i++)
+        {
+            Vector3Int tilePosition = piece.cells[i] + position;
+
+            if (bounds.Contains((Vector2Int)tilePosition) && !tilemap.HasTile(tilePosition))
+            {
+                tilemap.SetTile(tilePosition, piece.data.tile);
+            }
+            else
+            {
+                TileBase tileToSet = (gameOverTile != null) ? gameOverTile : piece.data.tile;
+                tilemap.SetTile(tilePosition, tileToSet);
+            }
+        }
     }
 
     public void Set(Piece piece)
@@ -95,6 +122,19 @@ public class Board : MonoBehaviour
             Vector3Int tilePosition = piece.cells[i] + piece.position;
             tilemap.SetTile(tilePosition, null);
         }
+    }
+
+    public bool WillNextPieceOverlap()
+    {
+        for (int i = 0; i < nextPieceData.cells.Length; i++)
+        {
+            Vector3Int checkPos = (Vector3Int)nextPieceData.cells[i] + spawnPosition;
+
+            // 다음 블록이 위치할 칸 중 하나라도 이미 타일이 차 있다면 true
+            if (tilemap.HasTile(checkPos)) { return true; }
+        }
+
+        return false;
     }
 
     public bool IsValidPosition(Piece piece, Vector3Int position)

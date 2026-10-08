@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     void NewGame()
     {
         score = 0;
+        Time.timeScale = 1f;
+
         UIManager.Instance.ResetUI();
     }
 
@@ -37,7 +39,7 @@ public class GameManager : MonoBehaviour
     // 게임 오버 처리
     public void GameOver()
     {
-        // Time.timeScale = 0f;
+        Time.timeScale = 0f;
 
         UIManager.Instance.ShowGameOver();
     }
