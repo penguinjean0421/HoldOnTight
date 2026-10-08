@@ -1881,6 +1881,7 @@ MonoBehaviour:
   holdTilemap: {fileID: 890160746}
   holdPosition: {x: -15, y: -4, z: 0}
   lineScores: 00000000640000002c010000f401000020030000i
+  tSpinValue: 2.5
 --- !u!1 &2032175920
 GameObject:
   m_ObjectHideFlags: 0

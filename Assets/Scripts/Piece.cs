@@ -26,6 +26,9 @@ public class Piece : MonoBehaviour
     public int hardDropValue;
     int dropDistance;
 
+    [Header("T Spin")]
+    public bool isLastMoveRotate { get; private set; }
+
     private float stepTime;
     private float moveTime;
     private float lockTime;
@@ -33,6 +36,7 @@ public class Piece : MonoBehaviour
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
         dropDistance = 0;
+        isLastMoveRotate = false;
 
         this.data = data;
         this.board = board;
@@ -121,6 +125,8 @@ public class Piece : MonoBehaviour
     private void Lock()
     {
         board.Set(this);
+
+        bool isTSpin = board.CheckTSpin(this);
         board.ClearLines();
         board.SpawnPiece();
     }
@@ -139,6 +145,8 @@ public class Piece : MonoBehaviour
             position = newPosition;
             moveTime = Time.time + moveDelay;
             lockTime = 0f; // reset
+
+            isLastMoveRotate = false;
         }
 
         return valid;
@@ -160,6 +168,7 @@ public class Piece : MonoBehaviour
             rotationIndex = originalRotation;
             ApplyRotationMatrix(-direction);
         }
+        else { isLastMoveRotate = true; }
     }
 
     private void ApplyRotationMatrix(int direction)
