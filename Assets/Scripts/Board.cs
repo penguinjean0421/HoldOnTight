@@ -11,6 +11,9 @@ public class Board : MonoBehaviour
     public Vector2Int boardSize = new Vector2Int(10, 20);
     public Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
+    [Header("Game Over")]
+    public Tile gameOverTile;
+
     [Header("Preview")]
     public Tilemap previewTilemap;
     public Vector3Int previewPosition = new Vector3Int(-15, 4, 0);
@@ -69,15 +72,15 @@ public class Board : MonoBehaviour
         SetNextPiece();
 
         if (IsValidPosition(activePiece, spawnPosition)) { Set(activePiece); }
-        else { GameOver(); }
+        else { GameManager.Instance.GameOver(); }
     }
 
-    public void GameOver()
-    {
-        GameManager.Instance.GameOver();
+    // public void GameOver()
+    // {
+    //     GameManager.Instance.GameOver();
 
-        // Do anything else you want on game over here..
-    }
+    //     // Do anything else you want on game over here..
+    // }
 
     public void Set(Piece piece)
     {
@@ -239,7 +242,7 @@ public class Board : MonoBehaviour
             activePiece.Initialize(this, spawnPosition, heldPieceData);
             heldPieceData = temp;
 
-            if (!IsValidPosition(activePiece, spawnPosition)) { GameOver(); }
+            if (!IsValidPosition(activePiece, spawnPosition)) { GameManager.Instance.GameOver(); }
             else { Set(activePiece); }
         }
 

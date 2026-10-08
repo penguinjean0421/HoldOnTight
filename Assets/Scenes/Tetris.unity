@@ -1876,6 +1876,7 @@ MonoBehaviour:
     tetromino: 6
   boardSize: {x: 10, y: 20}
   spawnPosition: {x: -1, y: 8, z: 0}
+  gameOverTile: {fileID: 11400000, guid: a00ee16ffd142a04c92e7ec02f12e8cf, type: 2}
   previewTilemap: {fileID: 121861869}
   previewPosition: {x: -15, y: 4, z: 0}
   holdTilemap: {fileID: 890160746}

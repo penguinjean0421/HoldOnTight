@@ -63,13 +63,15 @@ MonoBehaviour:
   description: Contains an orthographic camera and a Global Light 2D. Works with the 2D Renderer in Universal RP.
   preview: {fileID: -3604256930052969394}
   dependencies:
+  - dependency: {fileID: 2800000, guid: 51a1485338acae84585e3ea525804668, type: 3}
+    instantiationMode: 0
   - dependency: {fileID: 11400000, guid: ae5c5dcd9d2744248ba2beb6b8dab80f, type: 2}
+    instantiationMode: 1
+  - dependency: {fileID: 11400000, guid: a00ee16ffd142a04c92e7ec02f12e8cf, type: 2}
     instantiationMode: 1
   - dependency: {fileID: 2800000, guid: 774fa586ba243f54f92bce708ecb917b, type: 3}
     instantiationMode: 0
   - dependency: {fileID: 11400000, guid: be0a34e2a842ae742b4fa8541a5f9fcf, type: 2}
-    instantiationMode: 1
-  - dependency: {fileID: 11400000, guid: 5ccc2e0f056c64e4faabc30d888d18d9, type: 2}
     instantiationMode: 1
   - dependency: {fileID: 2800000, guid: 3f82b3ad9020ed3448c74b89545d893c, type: 3}
     instantiationMode: 0
@@ -79,22 +81,22 @@ MonoBehaviour:
     instantiationMode: 0
   - dependency: {fileID: 11400000, guid: 89eae29ecf56ea14c8b3927213a00066, type: 2}
     instantiationMode: 1
-  - dependency: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
-    instantiationMode: 0
   - dependency: {fileID: 2800000, guid: 6ff6b85966aeb3f4ab304af07f4dd424, type: 3}
+    instantiationMode: 0
+  - dependency: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
     instantiationMode: 0
   - dependency: {fileID: 2800000, guid: 08a04b12dd0d5ec4da08f074806d5bf7, type: 3}
     instantiationMode: 1
-  - dependency: {fileID: 2800000, guid: 51a1485338acae84585e3ea525804668, type: 3}
-    instantiationMode: 0
   - dependency: {fileID: 11400000, guid: 8316c87896e7b6448a324d8a66e43174, type: 2}
+    instantiationMode: 1
+  - dependency: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
     instantiationMode: 1
   - dependency: {fileID: 2800000, guid: b109e0a46ebdde140abbe8ffe76f424c, type: 3}
     instantiationMode: 0
-  - dependency: {fileID: 11400000, guid: aa44b5216a5f39e4881c5323564afe81, type: 2}
-    instantiationMode: 1
   - dependency: {fileID: 11400000, guid: 66df2645ff909154b9c8f7c006a6af32, type: 2}
     instantiationMode: 1
+  - dependency: {fileID: 2800000, guid: 56b8450037bf4b84ca7cb40f438f7716, type: 3}
+    instantiationMode: 0
   - dependency: {fileID: 11400000, guid: a10927dec698b7c49b1375f89e8db4d2, type: 2}
     instantiationMode: 1
   - dependency: {fileID: 11400000, guid: f6c4109fd0d185b419e5e665b07c42f0, type: 2}
