@@ -7,6 +7,7 @@ public class UIManager : MonoBehaviour
 
     [Header("UI Text Fields")]
     public Text scoreText;
+    public Text timerText;
 
     [Header("UI Panels")]
     public GameObject gameOver; // (선택) 게임오버 창
@@ -35,10 +36,22 @@ public class UIManager : MonoBehaviour
         if (gameOver != null) { gameOver.SetActive(true); }
     }
 
+    // 타이머 UI 갱신
+    public void UpdateTimer(float time)
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(time / 60f);
+            int seconds = Mathf.FloorToInt(time % 60f);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
+    }
+
     // UI 초기화
     public void ResetUI()
     {
         UpdateScore(0);
+        UpdateTimer(GameManager.Instance.timeLimit);
 
         if (gameOver != null) { gameOver.SetActive(false); }
     }

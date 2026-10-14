@@ -25,9 +25,15 @@ public class Piece : MonoBehaviour
     [Header("Drop Score")]
     public int hardDropValue;
     int dropDistance;
-
     [Header("T Spin")]
     public bool isLastMoveRotate { get; private set; }
+
+    [Header("Speed Settings")]
+    public float initialStepDelay = 1f;
+    public float minStepDelay = 0.08f;
+    public float speedUpFactor = 0.015f;
+    public float offsetMin = -0.05f;
+    public float offsetMax = 0.05f;
 
     private float stepTime;
     private float moveTime;
@@ -41,6 +47,11 @@ public class Piece : MonoBehaviour
         this.data = data;
         this.board = board;
         this.position = position;
+
+        float elapsedTime = GameManager.Instance.gameTime;
+        float baseDelay = initialStepDelay - (elapsedTime * speedUpFactor);
+        float randomOffset = Random.Range(offsetMin, offsetMax);
+        stepDelay = Mathf.Max(minStepDelay, baseDelay + randomOffset);
 
         rotationIndex = 0;
         stepTime = Time.time + stepDelay;
@@ -95,8 +106,6 @@ public class Piece : MonoBehaviour
                 GameManager.Instance.AddScore(1);
             }
         }
-
-
 
         // Left/right movement
         if (Input.GetKey(left)) { Move(Vector2Int.left); }

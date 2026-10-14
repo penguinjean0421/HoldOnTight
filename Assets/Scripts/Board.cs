@@ -33,6 +33,9 @@ public class Board : MonoBehaviour
     public int[] lineScores = { 0, 100, 300, 500, 800 }; // 1줄, 2줄, 3줄, 4줄
     public float tSpinValue;
 
+    [Header("Game Modes")]
+    public bool isIBlockSealed = false;
+
     public RectInt Bounds
     {
         get
@@ -199,10 +202,17 @@ public class Board : MonoBehaviour
     #region Preview
     void SetNextPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
+        int random;
+        // I-블록이 봉인된 상태면 I-블록이 아닌 조각이 나올 때까지 다시 뽑음
+        do
+        {
+            random = Random.Range(0, tetrominoes.Length);
+        }
+        while (isIBlockSealed && tetrominoes[random].tetromino == Tetromino.I);
+
         nextPieceData = tetrominoes[random];
 
-        RenderPreview();
+        RenderPreview(); //[cite: 1]
     }
 
     void RenderPreview()
