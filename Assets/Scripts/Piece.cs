@@ -64,8 +64,8 @@ public class Piece : MonoBehaviour
 
         // Handle rotation
         if (Input.GetKeyDown(acwRotate)) { Rotate(-1); }
-        else if (Input.GetKeyDown(cwRotate)) { Rotate(1); }
-        else if (Input.GetKeyDown(uTurnRotate)) { Rotate(2); }
+        // else if (Input.GetKeyDown(cwRotate)) { Rotate(1); }
+        // else if (Input.GetKeyDown(uTurnRotate)) { Rotate(2); }
 
         // Handle hard drop
         if (Input.GetKeyDown(hardDrop)) { HardDrop(); }
@@ -105,7 +105,8 @@ public class Piece : MonoBehaviour
 
     private void Step()
     {
-        stepTime = Time.time + stepDelay;
+        float currentDelay = GameManager.Instance != null ? GameManager.Instance.GetCurrentStepDelay() : stepDelay;
+        stepTime = Time.time + currentDelay;
 
         // Step down to the next row
         Move(Vector2Int.down);

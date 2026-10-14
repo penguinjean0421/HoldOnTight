@@ -131,11 +131,8 @@ public class Board : MonoBehaviour
         int row = bounds.yMin;
         int linesCleared = 0;
 
-        // Clear from bottom to top
         while (row < bounds.yMax)
         {
-            // Only advance to the next row if the current is not cleared
-            // because the tiles above will fall down when a row is cleared
             if (IsLineFull(row))
             {
                 LineClear(row);
@@ -147,8 +144,16 @@ public class Board : MonoBehaviour
             }
         }
 
-        if (isTSpin) { GameManager.Instance.AddScore((int)(lineScores[linesCleared] * tSpinValue)); }
-        else if (linesCleared > 0) { GameManager.Instance.AddScore(lineScores[linesCleared]); }
+        // T-Spin 판정 성공 시 GameManager에 알림 전달
+        if (isTSpin)
+        {
+            GameManager.Instance.RegisterTSpin();
+            GameManager.Instance.AddScore((int)(lineScores[linesCleared] * tSpinValue));
+        }
+        else if (linesCleared > 0)
+        {
+            GameManager.Instance.AddScore(lineScores[linesCleared]);
+        }
     }
 
     public bool IsLineFull(int row)
