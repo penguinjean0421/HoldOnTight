@@ -1551,6 +1551,10 @@ MonoBehaviour:
   board: {fileID: 1887623656}
   piece: {fileID: 1887623655}
   score: 0
+  mainCamera: {fileID: 519420031}
+  minEarthquakeInterval: 15
+  maxEarthquakeInterval: 30
+  hardDropSealDuration: 5
 --- !u!1 &1726986507
 GameObject:
   m_ObjectHideFlags: 0
@@ -1883,6 +1887,8 @@ MonoBehaviour:
   holdPosition: {x: -15, y: -4, z: 0}
   lineScores: 00000000640000002c010000f401000020030000i
   tSpinValue: 2.5
+  infectedTile: {fileID: 11400000, guid: 8bc8bafec0e7bcd4da52e58b06084ac2, type: 2}
+  infectionSpreadChance: 0.3
 --- !u!1 &2032175920
 GameObject:
   m_ObjectHideFlags: 0

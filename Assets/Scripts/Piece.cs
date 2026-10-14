@@ -25,6 +25,7 @@ public class Piece : MonoBehaviour
     [Header("Drop Score")]
     public int hardDropValue;
     int dropDistance;
+    public bool isHardDropSealed { get; private set; } = false;
 
     [Header("T Spin")]
     public bool isLastMoveRotate { get; private set; }
@@ -52,6 +53,19 @@ public class Piece : MonoBehaviour
         for (int i = 0; i < cells.Length; i++) { cells[i] = (Vector3Int)data.cells[i]; }
     }
 
+    public void SealHardDrop(float duration)
+    {
+        StopCoroutine(nameof(HardDropSealRoutine));
+        StartCoroutine(HardDropSealRoutine(duration));
+    }
+
+    private System.Collections.IEnumerator HardDropSealRoutine(float duration)
+    {
+        isHardDropSealed = true;
+        yield return new WaitForSeconds(duration);
+        isHardDropSealed = false;
+    }
+
     private void Update()
     {
         board.Clear(this);
@@ -68,7 +82,7 @@ public class Piece : MonoBehaviour
         else if (Input.GetKeyDown(uTurnRotate)) { Rotate(2); }
 
         // Handle hard drop
-        if (Input.GetKeyDown(hardDrop)) { HardDrop(); }
+        if (!isHardDropSealed && Input.GetKeyDown(hardDrop)) { HardDrop(); }
 
         // Allow the player to hold movement keys but only after a move delay
         // so it does not move too fast

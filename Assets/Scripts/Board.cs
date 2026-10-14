@@ -33,6 +33,10 @@ public class Board : MonoBehaviour
     public int[] lineScores = { 0, 100, 300, 500, 800 }; // 1줄, 2줄, 3줄, 4줄
     public float tSpinValue;
 
+    [Header("Infection System")]
+    public Tile infectedTile; // 감염된 블록 타일 (Unity Inspector에서 지정)
+    [Range(0f, 1f)] public float infectionSpreadChance = 0.3f; // 확산 확률
+
     public RectInt Bounds
     {
         get
@@ -131,11 +135,8 @@ public class Board : MonoBehaviour
         int row = bounds.yMin;
         int linesCleared = 0;
 
-        // Clear from bottom to top
         while (row < bounds.yMax)
         {
-            // Only advance to the next row if the current is not cleared
-            // because the tiles above will fall down when a row is cleared
             if (IsLineFull(row))
             {
                 LineClear(row);
@@ -149,7 +150,54 @@ public class Board : MonoBehaviour
 
         if (isTSpin) { GameManager.Instance.AddScore((int)(lineScores[linesCleared] * tSpinValue)); }
         else if (linesCleared > 0) { GameManager.Instance.AddScore(lineScores[linesCleared]); }
+
+        // 라인 클리어 검사 후 감염 확산
+        SpreadInfection();
     }
+
+    public void SpreadInfection()
+    {
+        if (infectedTile == null) return;
+
+        RectInt bounds = Bounds;
+        System.Collections.Generic.List<Vector3Int> toInfect = new System.Collections.Generic.List<Vector3Int>();
+
+        for (int col = bounds.xMin; col < bounds.xMax; col++)
+        {
+            for (int row = bounds.yMin; row < bounds.yMax; row++)
+            {
+                Vector3Int pos = new Vector3Int(col, row, 0);
+
+                // 현재 위치가 감염 타일인 경우
+                if (tilemap.GetTile(pos) == infectedTile)
+                {
+                    Vector3Int[] neighbors = {
+                        pos + Vector3Int.up,
+                        pos + Vector3Int.down,
+                        pos + Vector3Int.left,
+                        pos + Vector3Int.right
+                    };
+
+                    foreach (var nPos in neighbors)
+                    {
+                        if (bounds.Contains((Vector2Int)nPos) && tilemap.HasTile(nPos) && tilemap.GetTile(nPos) != infectedTile)
+                        {
+                            if (Random.value < infectionSpreadChance)
+                            {
+                                toInfect.Add(nPos);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach (var pos in toInfect)
+        {
+            tilemap.SetTile(pos, infectedTile);
+        }
+    }
+
 
     public bool IsLineFull(int row)
     {
