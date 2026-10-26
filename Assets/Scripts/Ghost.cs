@@ -19,9 +19,11 @@ public class Ghost : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (trackingPiece == null || mainBoard == null) return;
+
         Clear();
         Copy();
-        Drop();
+        CalculateDropPosition();
         Set();
     }
 
@@ -29,8 +31,7 @@ public class Ghost : MonoBehaviour
     {
         for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition = cells[i] + position;
-            tilemap.SetTile(tilePosition, null);
+            tilemap.SetTile(cells[i] + position, null);
         }
     }
 
@@ -42,39 +43,69 @@ public class Ghost : MonoBehaviour
         }
     }
 
-    private void Drop()
+    // 메인 보드의 타일 상태를 훼손하지 않고 낙하 지점 계산
+    private void CalculateDropPosition()
     {
-        Vector3Int position = trackingPiece.position;
-
-        int current = position.y;
+        Vector3Int currentPos = trackingPiece.position;
         int bottom = -mainBoard.boardSize.y / 2 - 1;
 
-        mainBoard.Clear(trackingPiece);
+        position = currentPos;
 
-        for (int row = current; row >= bottom; row--)
+        for (int row = currentPos.y; row >= bottom; row--)
         {
-            position.y = row;
+            Vector3Int testPos = new Vector3Int(currentPos.x, row, 0);
 
-            if (mainBoard.IsValidPosition(trackingPiece, position))
+            if (IsValidGhostPosition(testPos))
             {
-                this.position = position;
+                position = testPos;
             }
             else
             {
                 break;
             }
         }
+    }
 
-        mainBoard.Set(trackingPiece);
+    private bool IsValidGhostPosition(Vector3Int testPosition)
+    {
+        RectInt bounds = mainBoard.Bounds;
+
+        for (int i = 0; i < cells.Length; i++)
+        {
+            Vector3Int tilePosition = cells[i] + testPosition;
+
+            if (!bounds.Contains((Vector2Int)tilePosition)) return false;
+
+            // 현재 추적 중인 피스 자체 위치가 아닐 때만 타일 검사
+            if (mainBoard.tilemap.HasTile(tilePosition))
+            {
+                if (!IsCellOfTrackingPiece(tilePosition))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private bool IsCellOfTrackingPiece(Vector3Int tilePos)
+    {
+        for (int i = 0; i < trackingPiece.cells.Length; i++)
+        {
+            if (trackingPiece.cells[i] + trackingPiece.position == tilePos)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void Set()
     {
         for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition = cells[i] + position;
-            tilemap.SetTile(tilePosition, tile);
+            tilemap.SetTile(cells[i] + position, tile);
         }
     }
-
 }

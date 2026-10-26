@@ -7,56 +7,59 @@ public class GameManager : MonoBehaviour
     public Board board;
     public Piece piece;
 
-    public int score;
+    public int score { get; private set; }
+    public bool isGameOver { get; private set; }
 
-    void Awake()
+    private void Awake()
     {
-        if (Instance == null) { Instance = this; }
-        else { Destroy(gameObject); }
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    void Start()
+    private void Start()
     {
         NewGame();
     }
 
-    void NewGame()
+    public void NewGame()
     {
+        isGameOver = false;
         score = 0;
         Time.timeScale = 1f;
 
+        StageManager.Instance.ResetStage();
         UIManager.Instance.ResetUI();
+
+        if (UIManager.Instance.inGame.activeInHierarchy) { AudioManager.Instance.PlayGameplayBGM(); }
+        else { AudioManager.Instance.PlayTitleBGM(); }
+
+        if (board != null) board.ResetBoard();
     }
 
     public void AddScore(int amount)
     {
         score += amount;
-
-
-        UIManager.Instance.UpdateScore(score);
+        if (UIManager.Instance != null) UIManager.Instance.UpdateScore(score);
     }
 
-    // 게임 오버 처리
     public void GameOver()
     {
         Time.timeScale = 0f;
+        isGameOver = true;
 
-        UIManager.Instance.ShowGameOver();
+        if (UIManager.Instance != null) UIManager.Instance.ShowGameOver();
     }
-
 
     #region Button UI Func
-
     public void ReStart()
     {
-        board.tilemap.ClearAllTiles();
-
-        if (board.previewTilemap != null) { board.previewTilemap.ClearAllTiles(); }
-        if (board.holdTilemap != null) { board.holdTilemap.ClearAllTiles(); }
-
         NewGame();
     }
-
     #endregion
-
 }

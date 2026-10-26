@@ -1,3 +1,4 @@
+// using System.Collections<Vector3Int>;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -20,18 +21,25 @@ public class Board : MonoBehaviour
     public TetrominoData nextPieceData { get; private set; }
 
     [Header("Hold")]
-    // 위치와 타일맵
     public Tilemap holdTilemap;
     public Vector3Int holdPosition = new Vector3Int(-15, -4, 0);
 
-    // 상태
     public TetrominoData heldPieceData { get; private set; }
-    public bool hasHeldPiece { get; private set; } = false;
+    public bool hasHeldPiece { get; private set; }
     public bool canHold { get; private set; } = true;
 
     [Header("Score")]
-    public int[] lineScores = { 0, 100, 300, 500, 800 }; // 1줄, 2줄, 3줄, 4줄
-    public float tSpinValue;
+    public int[] lineScores = { 0, 100, 300, 500, 800 };
+    public float tSpinValue = 1.5f;
+
+    // T-Spin 검사용 캐시 배열 (GC Alloc 방지)
+    private static readonly Vector3Int[] TSpinCorners = new Vector3Int[]
+    {
+        new Vector3Int(-1,  1, 0),
+        new Vector3Int( 1,  1, 0),
+        new Vector3Int(-1, -1, 0),
+        new Vector3Int( 1, -1, 0)
+    };
 
     public RectInt Bounds
     {
@@ -42,7 +50,7 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void Awake()
+    void Awake()
     {
         tilemap = GetComponentInChildren<Tilemap>();
         activePiece = GetComponentInChildren<Piece>();
@@ -53,10 +61,21 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void Start()
+    public void ResetBoard()
     {
-        SetNextPiece();
+        tilemap.ClearAllTiles();
+        if (previewTilemap != null) previewTilemap.ClearAllTiles();
+        if (holdTilemap != null) holdTilemap.ClearAllTiles();
 
+        hasHeldPiece = false;
+        canHold = true;
+
+        if (activePiece != null && activePiece.cells != null)
+        {
+            Clear(activePiece);
+        }
+
+        SetNextPiece();
         SpawnPiece();
     }
 
@@ -64,26 +83,25 @@ public class Board : MonoBehaviour
     {
         canHold = true;
 
-        // 미리 뽑아둔 nextPieceData로 현재 조각을 생성
         TetrominoData currentData = nextPieceData;
         activePiece.Initialize(this, spawnPosition, currentData);
 
-        // 다음에 등장할 조각을 미리 뽑고 Preview 갱신
         SetNextPiece();
 
-        if (IsValidPosition(activePiece, spawnPosition)) { Set(activePiece); }
-        else { GameManager.Instance.GameOver(); }
+        if (IsValidPosition(activePiece, spawnPosition))
+        {
+            Set(activePiece);
+        }
+        else
+        {
+            GameManager.Instance.GameOver();
+        }
     }
-
-    // public void GameOver()
-    // {
-    //     GameManager.Instance.GameOver();
-
-    //     // Do anything else you want on game over here..
-    // }
 
     public void Set(Piece piece)
     {
+        if (piece == null || piece.cells == null) return;
+
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
@@ -93,6 +111,8 @@ public class Board : MonoBehaviour
 
     public void Clear(Piece piece)
     {
+        if (piece == null || piece.cells == null) return;
+
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
@@ -104,22 +124,12 @@ public class Board : MonoBehaviour
     {
         RectInt bounds = Bounds;
 
-        // The position is only valid if every cell is valid
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + position;
 
-            // An out of bounds tile is invalid
-            if (!bounds.Contains((Vector2Int)tilePosition))
-            {
-                return false;
-            }
-
-            // A tile already occupies the position, thus invalid
-            if (tilemap.HasTile(tilePosition))
-            {
-                return false;
-            }
+            if (!bounds.Contains((Vector2Int)tilePosition)) return false;
+            if (tilemap.HasTile(tilePosition)) return false;
         }
 
         return true;
@@ -131,11 +141,8 @@ public class Board : MonoBehaviour
         int row = bounds.yMin;
         int linesCleared = 0;
 
-        // Clear from bottom to top
         while (row < bounds.yMax)
         {
-            // Only advance to the next row if the current is not cleared
-            // because the tiles above will fall down when a row is cleared
             if (IsLineFull(row))
             {
                 LineClear(row);
@@ -147,8 +154,14 @@ public class Board : MonoBehaviour
             }
         }
 
-        if (isTSpin) { GameManager.Instance.AddScore((int)(lineScores[linesCleared] * tSpinValue)); }
-        else if (linesCleared > 0) { GameManager.Instance.AddScore(lineScores[linesCleared]); }
+        if (linesCleared > 0)
+        {
+            int baseScore = lineScores[Mathf.Min(linesCleared, lineScores.Length - 1)];
+            int finalScore = isTSpin ? (int)(baseScore * tSpinValue) : baseScore;
+
+            GameManager.Instance.AddScore(finalScore);
+            StageManager.Instance.AddClearedLines(linesCleared);
+        }
     }
 
     public bool IsLineFull(int row)
@@ -157,10 +170,7 @@ public class Board : MonoBehaviour
 
         for (int col = bounds.xMin; col < bounds.xMax; col++)
         {
-            Vector3Int position = new Vector3Int(col, row, 0);
-
-            // The line is not full if a tile is missing
-            if (!tilemap.HasTile(position))
+            if (!tilemap.HasTile(new Vector3Int(col, row, 0)))
             {
                 return false;
             }
@@ -169,29 +179,22 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    public void LineClear(int row)
+    void LineClear(int row)
     {
         RectInt bounds = Bounds;
 
-        // Clear all tiles in the row
         for (int col = bounds.xMin; col < bounds.xMax; col++)
         {
-            Vector3Int position = new Vector3Int(col, row, 0);
-            tilemap.SetTile(position, null);
+            tilemap.SetTile(new Vector3Int(col, row, 0), null);
         }
 
-        // Shift every row above down one
         while (row < bounds.yMax)
         {
             for (int col = bounds.xMin; col < bounds.xMax; col++)
             {
-                Vector3Int position = new Vector3Int(col, row + 1, 0);
-                TileBase above = tilemap.GetTile(position);
-
-                position = new Vector3Int(col, row, 0);
-                tilemap.SetTile(position, above);
+                TileBase above = tilemap.GetTile(new Vector3Int(col, row + 1, 0));
+                tilemap.SetTile(new Vector3Int(col, row, 0), above);
             }
-
             row++;
         }
     }
@@ -199,20 +202,25 @@ public class Board : MonoBehaviour
     #region Preview
     void SetNextPiece()
     {
-        int random = Random.Range(0, tetrominoes.Length);
-        nextPieceData = tetrominoes[random];
+        int random;
+        bool sealI = StageManager.Instance != null && StageManager.Instance.sealIBlock;
 
+        do
+        {
+            random = Random.Range(0, tetrominoes.Length);
+        }
+        while (sealI && tetrominoes[random].tetromino == Tetromino.I);
+
+        nextPieceData = tetrominoes[random];
         RenderPreview();
     }
 
     void RenderPreview()
     {
-        if (previewTilemap == null) { return; }
+        if (previewTilemap == null) return;
 
-        // 기존 미리 보기 타일을 지움.
         previewTilemap.ClearAllTiles();
 
-        // 선택된 nextPieceData의 셀 정보로 타일 배치
         for (int i = 0; i < nextPieceData.cells.Length; i++)
         {
             Vector3Int tilePosition = (Vector3Int)nextPieceData.cells[i] + previewPosition;
@@ -224,37 +232,39 @@ public class Board : MonoBehaviour
     #region Hold
     public void HoldPiece()
     {
-        if (!canHold) { return; }
+        if (!canHold) return;
 
         Clear(activePiece);
 
         if (!hasHeldPiece)
         {
-            // 홀드 상자가 비어있으면 현재 조각 저장 후 새 조각 스폰
             heldPieceData = activePiece.data;
             hasHeldPiece = true;
             SpawnPiece();
         }
         else
         {
-            // 이미 홀드된 조각이 있으면 현재 조각과 홀드 조각 교체 (Swap)
             TetrominoData temp = activePiece.data;
             activePiece.Initialize(this, spawnPosition, heldPieceData);
             heldPieceData = temp;
 
-            if (!IsValidPosition(activePiece, spawnPosition)) { GameManager.Instance.GameOver(); }
-            else { Set(activePiece); }
+            if (!IsValidPosition(activePiece, spawnPosition))
+            {
+                GameManager.Instance.GameOver();
+            }
+            else
+            {
+                Set(activePiece);
+            }
         }
 
         canHold = false;
-
         RenderHold();
     }
 
-    // Hold Tilemap에 홀드된 조각 그리기
     void RenderHold()
     {
-        if (holdTilemap == null) { return; }
+        if (holdTilemap == null) return;
 
         holdTilemap.ClearAllTiles();
 
@@ -269,35 +279,21 @@ public class Board : MonoBehaviour
     #region T-Spin
     public bool CheckTSpin(Piece piece)
     {
-        // 1. T 조각이 아니면 감지하지 않음
-        if (piece.data.tetromino != Tetromino.T) { return false; }
+        if (piece.data.tetromino != Tetromino.T || !piece.isLastMoveRotate) return false;
 
-        // 2. 마지막 동작이 회전이 아니었으면 감지하지 않음
-        if (!piece.isLastMoveRotate) { return false; }
-
-        // 3. T 조각 중심(0, 0) 기준 4개 대각선 모서리 위치 검사
         Vector3Int center = piece.position;
-        Vector3Int[] corners = new Vector3Int[]
-        {
-        center + new Vector3Int(-1,  1, 0), // 대각선 좌상
-        center + new Vector3Int( 1,  1, 0), // 대각선 우상
-        center + new Vector3Int(-1, -1, 0), // 대각선 좌하
-        center + new Vector3Int( 1, -1, 0)  // 대각선 우하
-        };
-
         int occupiedCorners = 0;
         RectInt bounds = Bounds;
 
-        foreach (Vector3Int corner in corners)
+        for (int i = 0; i < TSpinCorners.Length; i++)
         {
-            // 보드 경계 밖이거나 이미 타일이 차 있는 경우 충돌로 간주
+            Vector3Int corner = center + TSpinCorners[i];
             if (!bounds.Contains((Vector2Int)corner) || tilemap.HasTile(corner))
             {
                 occupiedCorners++;
             }
         }
 
-        // 4개 모서리 중 3개 이상 채워져 있다면 T-Spin 성공
         return occupiedCorners >= 3;
     }
     #endregion

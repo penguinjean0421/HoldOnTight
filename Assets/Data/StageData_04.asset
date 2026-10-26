@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42ab9da9e69d04b21a2909b45ccc3bd6, type: 3}
+  m_Name: StageData_04
+  m_EditorClassIdentifier: Assembly-CSharp::StageData
+  stageIndex: 4
+  stageTitle: Stage 4
+  stageIcon: {fileID: 2487655054320033108, guid: c09b13dc8cdbdea48a0a5cd868c41036, type: 3}
+  sealIBlock: 0
+  variableDropSpeed: 0
+  isTimeAttack: 0
+  infectedBlock: 1
+  earthquake: 0
+  disableHardDrop: 0
+  targetLines: 40
+  timeAttackLimit: 60
+  minDropDelay: 0.15
+  maxDropDelay: 0.8
+  infectionInterval: 6
+  infectedTile: {fileID: 11400000, guid: 8bc8bafec0e7bcd4da52e58b06084ac2, type: 2}
+  earthquakeInterval: 10

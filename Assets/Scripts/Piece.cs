@@ -8,11 +8,12 @@ public class Piece : MonoBehaviour
     public Vector3Int position { get; private set; }
     public int rotationIndex { get; private set; }
 
+    [Header("Settings")]
     public float stepDelay = 1f;
     public float moveDelay = 0.1f;
     public float lockDelay = 0.5f;
 
-    [Header("Play")]
+    [Header("Key Controls")]
     public KeyCode left = KeyCode.LeftArrow;
     public KeyCode right = KeyCode.RightArrow;
     public KeyCode softDrop = KeyCode.DownArrow;
@@ -23,109 +24,113 @@ public class Piece : MonoBehaviour
     public KeyCode hold = KeyCode.C;
 
     [Header("Drop Score")]
-    public int hardDropValue;
+    public int hardDropValue = 2;
     int dropDistance;
 
-    [Header("T Spin")]
     public bool isLastMoveRotate { get; private set; }
 
-    private float stepTime;
-    private float moveTime;
-    private float lockTime;
+    float stepTime;
+    float moveTime;
+    float lockTime;
 
     public void Initialize(Board board, Vector3Int position, TetrominoData data)
     {
-        dropDistance = 0;
-        isLastMoveRotate = false;
-
-        this.data = data;
         this.board = board;
         this.position = position;
+        this.data = data;
 
+        dropDistance = 0;
+        isLastMoveRotate = false;
         rotationIndex = 0;
+
         stepTime = Time.time + stepDelay;
         moveTime = Time.time + moveDelay;
         lockTime = 0f;
 
-        if (cells == null) { cells = new Vector3Int[data.cells.Length]; }
+        if (cells == null || cells.Length != data.cells.Length)
+        {
+            cells = new Vector3Int[data.cells.Length];
+        }
 
-        for (int i = 0; i < cells.Length; i++) { cells[i] = (Vector3Int)data.cells[i]; }
+        for (int i = 0; i < cells.Length; i++)
+        {
+            cells[i] = (Vector3Int)data.cells[i];
+        }
     }
 
     private void Update()
     {
+        if (GameManager.Instance != null && GameManager.Instance.isGameOver) return;
+
         board.Clear(this);
 
-        // We use a timer to allow the player to make adjustments to the piece
-        // before it locks in place
         lockTime += Time.deltaTime;
 
-        if (Input.GetKeyDown(hold)) { board.HoldPiece(); }
+        if (Input.GetKeyDown(hold))
+        {
+            board.HoldPiece();
+            return;
+        }
 
-        // Handle rotation
-        if (Input.GetKeyDown(acwRotate)) { Rotate(-1); }
-        else if (Input.GetKeyDown(cwRotate)) { Rotate(1); }
-        else if (Input.GetKeyDown(uTurnRotate)) { Rotate(2); }
+        if (Input.GetKeyDown(acwRotate)) Rotate(-1);
+        else if (Input.GetKeyDown(cwRotate)) Rotate(1);
+        else if (Input.GetKeyDown(uTurnRotate)) Rotate(2);
 
-        // Handle hard drop
-        if (Input.GetKeyDown(hardDrop)) { HardDrop(); }
+        if (Input.GetKeyDown(hardDrop))
+        {
+            if (StageManager.Instance == null || !StageManager.Instance.disableHardDrop)
+            {
+                HardDrop();
+                return;
+            }
+        }
 
-        // Allow the player to hold movement keys but only after a move delay
-        // so it does not move too fast
-        if (Time.time > moveTime) { HandleMoveInputs(); }
-
-        // Advance the piece to the next row every x seconds
-        if (Time.time > stepTime) { Step(); }
+        if (Time.time > moveTime) HandleMoveInputs();
+        if (Time.time > stepTime) Step();
 
         board.Set(this);
     }
 
     private void HandleMoveInputs()
     {
-        // Soft drop movement
         if (Input.GetKey(softDrop))
         {
             if (Move(Vector2Int.down))
             {
                 dropDistance++;
-
-                // Update the step time to prevent double movement
                 stepTime = Time.time + stepDelay;
-
                 GameManager.Instance.AddScore(1);
             }
         }
 
-
-
-        // Left/right movement
-        if (Input.GetKey(left)) { Move(Vector2Int.left); }
-        else if (Input.GetKey(right)) { Move(Vector2Int.right); }
+        if (Input.GetKey(left)) Move(Vector2Int.left);
+        else if (Input.GetKey(right)) Move(Vector2Int.right);
     }
 
     private void Step()
     {
         stepTime = Time.time + stepDelay;
-
-        // Step down to the next row
         Move(Vector2Int.down);
 
-        // Once the piece has been inactive for too long it becomes locked
-        if (lockTime >= lockDelay) { Lock(); }
+        if (lockTime >= lockDelay)
+        {
+            Lock();
+        }
     }
 
     private void HardDrop()
     {
-        while (Move(Vector2Int.down)) { dropDistance++; }
+        while (Move(Vector2Int.down))
+        {
+            dropDistance++;
+        }
         GameManager.Instance.AddScore(dropDistance * hardDropValue);
-
         Lock();
     }
 
     private void Lock()
     {
         board.Set(this);
-
         bool isTSpin = board.CheckTSpin(this);
         board.ClearLines(isTSpin);
         board.SpawnPiece();
@@ -133,52 +138,44 @@ public class Piece : MonoBehaviour
 
     private bool Move(Vector2Int translation)
     {
-        Vector3Int newPosition = position;
-        newPosition.x += translation.x;
-        newPosition.y += translation.y;
+        Vector3Int newPosition = position + (Vector3Int)translation;
 
-        bool valid = board.IsValidPosition(this, newPosition);
-
-        // Only save the movement if the new position is valid
-        if (valid)
+        if (board.IsValidPosition(this, newPosition))
         {
             position = newPosition;
             moveTime = Time.time + moveDelay;
-            lockTime = 0f; // reset
-
+            lockTime = 0f;
             isLastMoveRotate = false;
+            return true;
         }
 
-        return valid;
+        return false;
     }
 
     private void Rotate(int direction)
     {
-        // Store the current rotation in case the rotation fails
-        // and we need to revert
         int originalRotation = rotationIndex;
-
-        // Rotate all of the cells using a rotation matrix
         rotationIndex = Wrap(rotationIndex + direction, 0, 4);
+
         ApplyRotationMatrix(direction);
 
-        // Revert the rotation if the wall kick tests fail
         if (!TestWallKicks(rotationIndex, direction))
         {
             rotationIndex = originalRotation;
             ApplyRotationMatrix(-direction);
         }
-        else { isLastMoveRotate = true; }
+        else
+        {
+            isLastMoveRotate = true;
+        }
     }
 
     private void ApplyRotationMatrix(int direction)
     {
         float[] matrix = Data.RotationMatrix;
-
         int steps = Mathf.Abs(direction);
         int dir = direction > 0 ? 1 : -1;
 
-        // Rotate all of the cells using the rotation matrix
         for (int step = 0; step < steps; step++)
         {
             for (int i = 0; i < cells.Length; i++)
@@ -207,45 +204,29 @@ public class Piece : MonoBehaviour
         }
     }
 
-    private bool TestWallKicks(int rotationIndex, int rotationDirection)
+    bool TestWallKicks(int rotIndex, int rotDirection)
     {
-        int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
+        int wallKickIndex = GetWallKickIndex(rotIndex, rotDirection);
 
         for (int i = 0; i < data.wallKicks.GetLength(1); i++)
         {
             Vector2Int translation = data.wallKicks[wallKickIndex, i];
-
-            if (Move(translation))
-            {
-                return true;
-            }
+            if (Move(translation)) return true;
         }
 
         return false;
     }
 
-    private int GetWallKickIndex(int rotationIndex, int rotationDirection)
+    int GetWallKickIndex(int rotIndex, int rotDirection)
     {
-        int wallKickIndex = rotationIndex * 2;
-
-        if (rotationDirection < 0)
-        {
-            wallKickIndex--;
-        }
-
+        int wallKickIndex = rotIndex * 2;
+        if (rotDirection < 0) wallKickIndex--;
         return Wrap(wallKickIndex, 0, data.wallKicks.GetLength(0));
     }
 
-    private int Wrap(int input, int min, int max)
+    int Wrap(int input, int min, int max)
     {
-        if (input < min)
-        {
-            return max - (min - input) % (max - min);
-        }
-        else
-        {
-            return min + (input - min) % (max - min);
-        }
+        int range = max - min;
+        return min + (((input - min) % range + range) % range);
     }
-
 }
